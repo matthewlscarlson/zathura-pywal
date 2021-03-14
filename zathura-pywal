@@ -1,0 +1,134 @@
+#!/bin/sh
+#
+# A better version of zathura-pywal that saves settings and features alpha transparency
+
+zathurarc="/home/$(whoami)/.config/zathura/zathurarc"
+grepdir="/usr/share/zathura-pywal/settings"
+colors="/home/$(whoami)/.cache/wal/colors.sh"
+
+usage() {
+  printf "Usage: $(basename $0) [options]\n" 1>&2;
+  printf 'Options:\n'
+  printf -- '-a%-6sAlpha transparency of the background (default: 1)\n'
+  printf -- '-h%-6sDisplay this prompt\n'
+  exit 1;
+}
+
+zathura_pywal() {
+  printf 'Checking for zathurarc...\n'
+  sleep 0.2s
+  [ -f "${zathurarc}" ] && { printf "Backing up zathurarc...\n"; settings="$(grep -v -f ${grepdir} ${zathurarc} | sed '/^$/d' )"; cp "${zathurarc}" "${zathurarc}.bak" ; } \
+                        || { printf "Creating zathurarc...\n"; touch "${zathurarc}" ; }
+  sleep 0.2s
+  printf 'Checking for pywal color scheme...\n'
+  sleep 0.2s
+  { [ -f "${colors}" ] && . "${colors}" ; } || { printf 'Pywal color scheme not found.\nPlease make sure you run pywal in order to generate a colorscheme.\n' && exit 1; }
+    cat /dev/null > "${zathurarc}"
+    [ -n "${settings}" ] && { printf 'Copying old settings into zathurarc...\n' && sleep 0.2s && echo "### Settings from original zathurarc ###
+${settings}
+" >> "${zathurarc}" ; }
+  printf 'Changing zathura color scheme...\n'
+  sleep 0.2s
+  hex="${color0:1}"
+  r="$(printf "%d" 0x${hex:0:2})"
+  g="$(printf "%d" 0x${hex:2:2})"
+  b="$(printf "%d" 0x${hex:4:2})"
+  [ -z "${alpha}" ] && alpha=1
+  [ "${alpha::1}" == "." ] && alpha="${alpha/./0.}"
+  alpha="${alpha:0:4}"
+  echo "### General recoloring settings ###
+# Allow recoloring
+set recolor \"true\"
+# Don't allow original hue when recoloring
+set recolor-keephue \"false\"
+# Don't keep original image colors while recoloring
+set recolor-reverse-video \"false\"
+
+### Theming ###
+# Command line completion entries
+set completion-fg \"${color7}\"
+set completion-bg \"${color0}\"
+
+# Command line completion group elements
+set completion-group-fg \"${color2}\"
+set completion-group-bg \"${color0}\"
+
+# Current command line completion element
+set completion-highlight-fg \"${color0}\"
+set completion-highlight-bg \"${color7}\"
+
+# Default foreground/background color
+# set default-fg # TODO
+set default-bg rgba(${r},${g},${b},${alpha})
+
+# Input bar
+set inputbar-fg \"${color7}\"
+set inputbar-bg \"${color0}\"
+
+# Notification
+set notification-fg \"${color7}\"
+set notification-bg \"${color0}\"
+
+# Error notification
+set notification-error-fg \"${color7}\"
+set notification-error-bg \"${color1}\"
+
+# Warning notification
+set notification-warning-fg \"${color7}\"
+set notification-warning-bg \"${color1}\"
+
+# Tab - TODO
+# set tabbar-fg
+# set tabbar-bg
+
+# Focused tab - TODO
+# set tabbar-focus-fg
+# set tabbar-focus-bg
+
+# Status bar
+set statusbar-fg \"${color7}\"
+set statusbar-bg \"${color0}\"
+
+# Highlighting parts of the document (e.g. show search results)
+set highlight-color \"${color2}\"
+set highlight-active-color \"${color2}\"
+
+# Represent light/dark colors in recoloring mode
+set recolor-lightcolor rgba(0,0,0,0)
+set recolor-darkcolor \"${color7}\"
+
+# \"Loading...\" text
+set render-loading-fg \"${color7}\"
+set render-loading-bg \"${color0}\"
+
+# Index mode
+set index-fg \"${color7}\"
+set index-bg \"${color0}\"
+
+# Selected element in index mode
+set index-active-fg \"${color0}\"
+set index-active-bg \"${color7}\"" >> "${zathurarc}"
+  printf "All done.\nPress \'Ctrl\' + \'R\' (or whatever \'recolor\' is mapped to) with zathura open to toggle the color scheme.\n"
+}
+
+main() {
+  [ $# -eq 0 ] && zathura_pywal
+
+  while getopts "a:h" o; do
+    case "${o}" in
+      a)
+        alpha="${OPTARG}"
+        if ! echo "${alpha}" | grep -q -P '^0*\.+[0-9]+$|^[0-1]$'; then
+          printf 'Alpha must be a decimal value between 0 and 1.\n'
+          usage
+        fi
+        zathura_pywal ${alpha}
+        ;;
+      h|*)
+        usage
+        ;;
+      esac
+  done
+}
+
+main "$@"

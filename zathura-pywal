@@ -6,7 +6,7 @@ NEWLINE='
 '
 ZATHURA_DIR="${XDG_CONFIG_HOME:-${HOME}/.config/}/zathura/"
 ZATHURARC="${ZATHURA_DIR}/zathurarc"
-GREPDIR="/usr/share/zathura-pywal/settings"
+SETTINGS="/usr/share/zathura-pywal/settings"
 COLORS="${XDG_CACHE_HOME:-${HOME}/.cache/}/wal/colors.sh"
 
 usage() {
@@ -20,7 +20,8 @@ zathura_pywal() {
     printf 'Checking for zathurarc...\n'
     if [ -f "${ZATHURARC}" ]; then
         printf 'Backing up zathurarc...\n'
-        settings="$(grep -v -f "${GREPDIR}" "${ZATHURARC}" | sed '/^$/d' )"
+        [ ! -f "${SETTINGS}" ] && printf 'Settings not found.\n' && return 1
+        settings="$(grep -f "${SETTINGS}" -v "${ZATHURARC}" | sed '/^$/d' )"
         cp "${ZATHURARC}" "${ZATHURARC}.bak"
     else
         printf 'Creating zathurarc...\n'
@@ -143,7 +144,7 @@ main() {
         case "${o}" in
             a)
                 alpha="${OPTARG}"
-                if ! printf '%s' "${alpha}" | grep -q -P '^0*\.+[0-9]+$|^[0-1]$'; then
+                if ! printf '%s' "${alpha}" | grep -q '^0*\.[0-9][0-9]*$\|^[0-1]$'; then
                     printf 'Alpha must be a decimal value between 0 and 1.\n'
                     usage
                     return 1

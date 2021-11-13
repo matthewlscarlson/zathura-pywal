@@ -9,7 +9,7 @@ This script is POSIX-compliant, meaning that it will work on any shell that supp
 
 # Installation
 ```shell
-$ git clone https://github.com/mslcarlson/zathura-pywal/
+$ git clone https://github.com/mlscarlson/zathura-pywal/
 $ cd zathura-pywal
 $ sudo make install
 ```

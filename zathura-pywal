@@ -51,9 +51,9 @@ zathura_pywal() {
     b=$(printf '%s' "${hex}" | cut -c 3-4)
     c=$(printf '%s' "${hex}" | cut -c 5-6)
 
-    r=$(printf '%s\n' "ibase=16; ${a}" | bc)
-    g=$(printf '%s\n' "ibase=16; ${b}" | bc)
-    b=$(printf '%s\n' "ibase=16; ${c}" | bc)
+    r=$(printf '%d' 0x${a})
+    g=$(printf '%d' 0x${b})
+    b=$(printf '%d' 0x${c})
 
     [ -z "${alpha}" ] && alpha=1
 
